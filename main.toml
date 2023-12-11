@@ -1,0 +1,7 @@
+[window]
+always_on_top = false
+borderless = false
+
+[window.resolution]
+width = 200
+height = 100
