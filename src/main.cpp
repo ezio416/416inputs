@@ -76,10 +76,10 @@ bool Init() {
     }
 
     if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"))
-        printf("warning: linear texture filtering disabled");
+        printf("warning: linear texture filtering disabled\n");
 
     if (use_gamepad && !SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1"))
-        printf("warning: background joystick failed");
+        printf("warning: background joystick failed\n");
 
     Uint32 flags = SDL_WINDOW_SHOWN;
     if (always_on_top)
@@ -249,7 +249,7 @@ int main(int argc, char* argv[]) {
 
                 if (steer_percent != "0") {
                     if (!LoadTextureFromText(steer_percent, textColor))
-                        printf("text failed to load\n");
+                        printf("left text failed to load\n");
                     else {
                         rect = {
                             (ww3 / 2) - (textWidth / 2),
@@ -271,7 +271,7 @@ int main(int argc, char* argv[]) {
 
                 if (steer_percent != "0") {
                     if (!LoadTextureFromText(steer_percent, textColor))
-                        printf("text failed to load\n");
+                        printf("right text failed to load\n");
                     else {
                         rect = {
                             window_width - (ww3 / 2) - (textWidth / 2),
