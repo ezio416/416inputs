@@ -1,11 +1,13 @@
 /*This source code copyrighted by Lazy Foo' Productions 2004-2023
 and may not be redistributed without written permission.*/
 
-//Using SDL, SDL_image, standard IO, and strings
+//Using SDL, SDL_image, SDL_ttf, standard IO, math, and strings
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <stdio.h>
 #include <string>
+#include <cmath>
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
@@ -24,11 +26,23 @@ class LTexture
 		//Loads image at specified path
 		bool loadFromFile( std::string path );
 
+		//Creates image from font string
+		bool loadFromRenderedText( std::string textureText, SDL_Color textColor );
+
 		//Deallocates texture
 		void free();
 
+		//Set color modulation
+		void setColor( Uint8 red, Uint8 green, Uint8 blue );
+
+		//Set blending
+		void setBlendMode( SDL_BlendMode blending );
+
+		//Set alpha modulation
+		void setAlpha( Uint8 alpha );
+
 		//Renders texture at given point
-		void render( int x, int y );
+		void render( int x, int y, SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE );
 
 		//Gets image dimensions
 		int getWidth();
@@ -58,9 +72,11 @@ SDL_Window* gWindow = NULL;
 //The window renderer
 SDL_Renderer* gRenderer = NULL;
 
-//Scene textures
-LTexture gFooTexture;
-LTexture gBackgroundTexture;
+//Globally used font
+TTF_Font* gFont = NULL;
+
+//Rendered texture
+LTexture gTextTexture;
 
 
 LTexture::LTexture()
@@ -118,6 +134,40 @@ bool LTexture::loadFromFile( std::string path )
 	return mTexture != NULL;
 }
 
+bool LTexture::loadFromRenderedText( std::string textureText, SDL_Color textColor )
+{
+	//Get rid of preexisting texture
+	free();
+
+	//Render text surface
+	SDL_Surface* textSurface = TTF_RenderText_Solid( gFont, textureText.c_str(), textColor );
+	if( textSurface == NULL )
+	{
+		printf( "Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError() );
+	}
+	else
+	{
+		//Create texture from surface pixels
+        mTexture = SDL_CreateTextureFromSurface( gRenderer, textSurface );
+		if( mTexture == NULL )
+		{
+			printf( "Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError() );
+		}
+		else
+		{
+			//Get image dimensions
+			mWidth = textSurface->w;
+			mHeight = textSurface->h;
+		}
+
+		//Get rid of old surface
+		SDL_FreeSurface( textSurface );
+	}
+
+	//Return success
+	return mTexture != NULL;
+}
+
 void LTexture::free()
 {
 	//Free texture if it exists
@@ -130,11 +180,38 @@ void LTexture::free()
 	}
 }
 
-void LTexture::render( int x, int y )
+void LTexture::setColor( Uint8 red, Uint8 green, Uint8 blue )
+{
+	//Modulate texture rgb
+	SDL_SetTextureColorMod( mTexture, red, green, blue );
+}
+
+void LTexture::setBlendMode( SDL_BlendMode blending )
+{
+	//Set blending function
+	SDL_SetTextureBlendMode( mTexture, blending );
+}
+
+void LTexture::setAlpha( Uint8 alpha )
+{
+	//Modulate texture alpha
+	SDL_SetTextureAlphaMod( mTexture, alpha );
+}
+
+void LTexture::render( int x, int y, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip )
 {
 	//Set rendering space and render to screen
 	SDL_Rect renderQuad = { x, y, mWidth, mHeight };
-	SDL_RenderCopy( gRenderer, mTexture, NULL, &renderQuad );
+
+	//Set clip rendering dimensions
+	if( clip != NULL )
+	{
+		renderQuad.w = clip->w;
+		renderQuad.h = clip->h;
+	}
+
+	//Render to screen
+	SDL_RenderCopyEx( gRenderer, mTexture, clip, &renderQuad, angle, center, flip );
 }
 
 int LTexture::getWidth()
@@ -175,8 +252,8 @@ bool init()
 		}
 		else
 		{
-			//Create renderer for window
-			gRenderer = SDL_CreateRenderer( gWindow, -1, SDL_RENDERER_ACCELERATED );
+			//Create vsynced renderer for window
+			gRenderer = SDL_CreateRenderer( gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC );
 			if( gRenderer == NULL )
 			{
 				printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -194,6 +271,13 @@ bool init()
 					printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
 					success = false;
 				}
+
+				 //Initialize SDL_ttf
+				if( TTF_Init() == -1 )
+				{
+					printf( "SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError() );
+					success = false;
+				}
 			}
 		}
 	}
@@ -206,18 +290,22 @@ bool loadMedia()
 	//Loading success flag
 	bool success = true;
 
-	//Load Foo' texture
-	if( !gFooTexture.loadFromFile( "src/tutorial/10_color_keying/foo.png" ) )
+	//Open the font
+	gFont = TTF_OpenFont( "src/tutorial/16_true_type_fonts/lazy.ttf", 28 );
+	if( gFont == NULL )
 	{
-		printf( "Failed to load Foo' texture image!\n" );
+		printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
 		success = false;
 	}
-
-	//Load background texture
-	if( !gBackgroundTexture.loadFromFile( "src/tutorial/10_color_keying/background.png" ) )
+	else
 	{
-		printf( "Failed to load background texture image!\n" );
-		success = false;
+		//Render text
+		SDL_Color textColor = { 0, 0, 0 };
+		if( !gTextTexture.loadFromRenderedText( "The quick brown fox jumps over the lazy dog", textColor ) )
+		{
+			printf( "Failed to render text texture!\n" );
+			success = false;
+		}
 	}
 
 	return success;
@@ -226,8 +314,11 @@ bool loadMedia()
 void close()
 {
 	//Free loaded images
-	gFooTexture.free();
-	gBackgroundTexture.free();
+	gTextTexture.free();
+
+	//Free global font
+	TTF_CloseFont( gFont );
+	gFont = NULL;
 
 	//Destroy window
 	SDL_DestroyRenderer( gRenderer );
@@ -236,6 +327,7 @@ void close()
 	gRenderer = NULL;
 
 	//Quit SDL subsystems
+	TTF_Quit();
 	IMG_Quit();
 	SDL_Quit();
 }
@@ -279,11 +371,8 @@ int main( int argc, char* args[] )
 				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
 				SDL_RenderClear( gRenderer );
 
-				//Render background texture to screen
-				gBackgroundTexture.render( 0, 0 );
-
-				//Render Foo' to the screen
-				gFooTexture.render( 240, 190 );
+				//Render current frame
+				gTextTexture.render( ( SCREEN_WIDTH - gTextTexture.getWidth() ) / 2, ( SCREEN_HEIGHT - gTextTexture.getHeight() ) / 2 );
 
 				//Update screen
 				SDL_RenderPresent( gRenderer );
