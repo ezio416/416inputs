@@ -15,8 +15,12 @@ SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 SDL_Joystick* gamepad = NULL;
 
-int joy_axis_value = 0;
-float joy_axis_value_normalized = 0.0f;
+int joy_left_x_value = 0;
+float joy_left_x_value_normalized = 0.0f;
+// int joy_left_trigger_value = 0;
+bool joy_left_trigger = false;
+// int joy_right_trigger_value = 0;
+bool joy_right_trigger = false;
 
 bool ReadConfig() {
     toml::table config;
@@ -137,11 +141,20 @@ int main(int argc, char* argv[]) {
             if (e.type == SDL_QUIT)
                 quit = true;
             else if (e.type = SDL_JOYAXISMOTION && e.jaxis.which == 0) {
-                if (e.jaxis.axis == 0)
-                    joy_axis_value = e.jaxis.value;
-                else if (e.jaxis.axis == 1) {
-                    ;
-                }
+                if (e.jaxis.axis == 0)  // left x
+                    joy_left_x_value = e.jaxis.value;
+                // else if (e.jaxis.axis == 1)  // left y
+                //     std::cout << "axis 1: " << e.jaxis.value << "\n";
+                // else if (e.jaxis.axis == 2)  // right x
+                //     std::cout << "axis 2: " << e.jaxis.value << "\n";
+                // else if (e.jaxis.axis == 3)  // right y
+                //     std::cout << "axis 3: " << e.jaxis.value << "\n";
+                else if (e.jaxis.axis == 4)  // left trigger
+                    // std::cout << "axis 4: " << e.jaxis.value << "\n";
+                    joy_left_trigger = e.jaxis.value != -32768;
+                else if (e.jaxis.axis == 5)  // right trigger
+                    // std::cout << "axis 5: " << e.jaxis.value << "\n";
+                    joy_right_trigger = e.jaxis.value != -32768;
             }
         }
 
@@ -159,19 +172,28 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(renderer, r, g, b, a);
 
         if (use_gamepad && gamepad != NULL) {
-            if (joy_axis_value != last_axis_value) {
-                joy_axis_value_normalized = (float)joy_axis_value / 32768;
-                // std::cout << joy_axis_value << " " << joy_axis_value_normalized << "\n";
-                last_axis_value = joy_axis_value;
+            if (joy_left_trigger) {
+                SDL_Rect rect = { ww3, wh2, ww3, wh2 };
+                SDL_RenderFillRect(renderer, &rect);
+            }
+            if (joy_right_trigger) {
+                SDL_Rect rect = { ww3, 0, ww3, wh2 };
+                SDL_RenderFillRect(renderer, &rect);
             }
 
-            int width = (int)((float)ww3 * fabs(joy_axis_value_normalized));
+            if (joy_left_x_value != last_axis_value) {
+                joy_left_x_value_normalized = (float)joy_left_x_value / 32768;
+                // std::cout << joy_axis_value << " " << joy_axis_value_normalized << "\n";
+                last_axis_value = joy_left_x_value;
+            }
+
+            int width = (int)((float)ww3 * fabs(joy_left_x_value_normalized));
             // if (width != last_width) {
             //     std::cout << "width: " << width << "\n";
             //     last_width = width;
             // }
 
-            if (joy_axis_value_normalized < 0) {
+            if (joy_left_x_value_normalized < 0) {
                 SDL_Rect rect = {
                     ww3 - width,
                     0,
@@ -179,7 +201,7 @@ int main(int argc, char* argv[]) {
                     window_height
                 };
                 SDL_RenderFillRect(renderer, &rect);
-            } else if (joy_axis_value_normalized > 0) {
+            } else if (joy_left_x_value_normalized > 0) {
                 SDL_Rect rect = {
                     ww3 * 2,
                     0,
