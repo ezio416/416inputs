@@ -1,7 +1,10 @@
 [window]
-always_on_top = false
+always_on_top = true
 borderless = false
 
 [window.resolution]
 width = 200
 height = 100
+
+[input]
+use_gamepad = true
