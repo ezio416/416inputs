@@ -5,7 +5,7 @@ import subprocess
 
 include_dir = 'dependencies/include'
 lib_dir = 'dependencies/lib'
-lib = '-lmingw32 -lSDL2main -lSDL2 -lSDL2_image'
+lib = '-lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf'
 
 def main():
     # subprocess.call('taskkill /im tut.exe')
