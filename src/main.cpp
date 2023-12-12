@@ -26,8 +26,10 @@ int textHeight = 0;
 int steer_value = 0;
 float steer_value_normalized = 0.0f;
 string steer_percent = "";
-bool left_trigger = false;
-bool right_trigger = false;
+// bool left_trigger = false;
+int brake_value = -32768;
+// bool right_trigger = false;
+int gas_value = -32768;
 
 bool ReadConfig() {
     toml::table config;
@@ -200,10 +202,16 @@ int main(int argc, char* argv[]) {
             else if (e.type = SDL_JOYAXISMOTION && e.jaxis.which == 0) {
                 if (e.jaxis.axis == 0)  // left x
                     steer_value = e.jaxis.value;
-                else if (e.jaxis.axis == 4)  // left trigger
-                    left_trigger = e.jaxis.value != -32768;
-                else if (e.jaxis.axis == 5)  // right trigger
-                    right_trigger = e.jaxis.value != -32768;
+                else if (e.jaxis.axis == 4) {  // left trigger
+                    // left_trigger = true;
+                    brake_value = e.jaxis.value;
+                    // cout << brake_value << "\n";
+                    // left_trigger = brake_value != -32768;
+                } else if (e.jaxis.axis == 5) {  // right trigger
+                    // right_trigger = true;
+                    gas_value = e.jaxis.value;
+                    // right_trigger = gas_value != -32768;
+                }
             }
         }
 
@@ -221,13 +229,38 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(renderer, r, g, b, a);
 
         if (use_gamepad && gamepad != NULL) {
-            if (left_trigger) {
-                SDL_Rect rect = { ww3, wh2, ww3, wh2 };
-                SDL_RenderFillRect(renderer, &rect);
-            }
-            if (right_trigger) {
+            if (gas_value > -8610) {
                 SDL_Rect rect = { ww3, 0, ww3, wh2 };
                 SDL_RenderFillRect(renderer, &rect);
+
+                // if (!LoadTextureFromText(to_string(gas_value), textColor))
+                //     printf("gas text failed to load\n");
+                // else {
+                //     rect = {
+                //         (window_width / 2) - (textWidth / 2),
+                //         (wh2 / 2) - (textHeight / 2),
+                //         textWidth,
+                //         textHeight
+                //     };
+                //     SDL_RenderCopyEx(renderer, textTexture, NULL, &rect, 0, NULL, SDL_FLIP_NONE);
+                // }
+            }
+
+            if (brake_value > -8610) {
+                SDL_Rect rect = { ww3, wh2, ww3, wh2 };
+                SDL_RenderFillRect(renderer, &rect);
+
+                // if (!LoadTextureFromText(to_string(brake_value), textColor))
+                //     printf("brake text failed to load\n");
+                // else {
+                //     rect = {
+                //         (window_width / 2) - (textWidth / 2),
+                //         window_height - (wh2 / 2) - (textHeight / 2),
+                //         textWidth,
+                //         textHeight
+                //     };
+                //     SDL_RenderCopyEx(renderer, textTexture, NULL, &rect, 0, NULL, SDL_FLIP_NONE);
+                // }
             }
 
             if (steer_value != last_steer_value) {
@@ -238,7 +271,7 @@ int main(int argc, char* argv[]) {
 
             int width = (int)((float)ww3 * fabs(steer_value_normalized));
 
-            if (steer_value_normalized < 0) {
+            if (steer_value_normalized < -0.1f) {
                 SDL_Rect rect = {
                     ww3 - width,
                     0,
@@ -260,7 +293,7 @@ int main(int argc, char* argv[]) {
                         SDL_RenderCopyEx(renderer, textTexture, NULL, &rect, 0, NULL, SDL_FLIP_NONE);
                     }
                 }
-            } else if (steer_value_normalized > 0) {
+            } else if (steer_value_normalized > 0.1f) {
                 SDL_Rect rect = {
                     ww3 * 2,
                     0,

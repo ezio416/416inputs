@@ -1,13 +1,13 @@
 [window]
 always_on_top = true
-borderless = true
+borderless = false
 
 [window.resolution]
-width = 200
-height = 100
+width = 900
+height = 400
 
 [window.text]
-font_size = 20
+font_size = 100
 
 [input]
 use_gamepad = true
