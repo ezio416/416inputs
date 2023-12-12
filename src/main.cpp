@@ -111,14 +111,31 @@ int main(int argc, char* argv[]) {
         SetRendererWhite();
         SDL_RenderClear(renderer);
 
-        SDL_Rect fillRect = {
-            window_width / 4,
-            window_height / 4,
-            window_width / 2,
-            window_height / 2
-        };
-        SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-        SDL_RenderFillRect(renderer, &fillRect);
+        const Uint8* keyStates = SDL_GetKeyboardState(NULL);
+
+        int ww3 = window_width / 3 + 1;
+        int wh2 = window_height / 2;
+
+        if (keyStates[SDL_SCANCODE_W]) {
+            SDL_Rect rect = { ww3, 0, ww3, wh2 };
+            SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+            SDL_RenderFillRect(renderer, &rect);
+        }
+        if (keyStates[SDL_SCANCODE_A]) {
+            SDL_Rect rect = { 0, 0, ww3, window_height };
+            SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+            SDL_RenderFillRect(renderer, &rect);
+        }
+        if (keyStates[SDL_SCANCODE_S] || keyStates[SDL_SCANCODE_SPACE]) {
+            SDL_Rect rect = { ww3, wh2, ww3, wh2 };
+            SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+            SDL_RenderFillRect(renderer, &rect);
+        }
+        if (keyStates[SDL_SCANCODE_D]) {
+            SDL_Rect rect = { ww3 * 2, 0, ww3, window_height };
+            SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+            SDL_RenderFillRect(renderer, &rect);
+        }
 
         SDL_RenderPresent(renderer);
     }
