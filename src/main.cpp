@@ -1,5 +1,5 @@
 // c 2023-12-10
-// m 2023-12-11
+// m 2023-12-12
 
 #include <iostream>
 #include <SDL.h>
@@ -199,7 +199,7 @@ int main(int argc, char* argv[]) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT)
                 quit = true;
-            else if (e.type = SDL_JOYAXISMOTION && e.jaxis.which == 0) {
+            else if (e.type == SDL_JOYAXISMOTION && e.jaxis.which == 0) {
                 if (e.jaxis.axis == 0)  // left x
                     steer_value = e.jaxis.value;
                 else if (e.jaxis.axis == 4) {  // left trigger
@@ -212,7 +212,9 @@ int main(int argc, char* argv[]) {
                     gas_value = e.jaxis.value;
                     // right_trigger = gas_value != -32768;
                 }
-            }
+            }// else if (e.type == SDL_JOYBUTTONDOWN && e.jbutton.which == 0) {
+            //     cout <<  << "\n";
+            // }
         }
 
         SDL_SetRenderDrawColor(renderer, 0x66, 0x66, 0x66, 0xFF);
@@ -229,7 +231,14 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(renderer, r, g, b, a);
 
         if (use_gamepad && gamepad != NULL) {
-            if (gas_value > -8610) {
+            // 0 A  1 B  2 X  3 Y  4 LB  5 RB  6 back  7 start  8 ls  9 rs  10 home
+            // for (int i = 0; i < 15; i++) {
+            //     if (SDL_JoystickGetButton(gamepad, i))
+            //         printf("button %i\n", i);
+            // }
+
+            // if (gas_value > -8610) {
+            if (SDL_JoystickGetButton(gamepad, 0)) {
                 SDL_Rect rect = { ww3, 0, ww3, wh2 };
                 SDL_RenderFillRect(renderer, &rect);
 
@@ -246,7 +255,8 @@ int main(int argc, char* argv[]) {
                 // }
             }
 
-            if (brake_value > -8610) {
+            // if (brake_value > -8610) {
+            if (SDL_JoystickGetButton(gamepad, 4)) {
                 SDL_Rect rect = { ww3, wh2, ww3, wh2 };
                 SDL_RenderFillRect(renderer, &rect);
 
