@@ -1,5 +1,5 @@
 // c 2023-12-10
-// m 2023-12-12
+// m 2024-02-23
 
 #include <iostream>
 #include <SDL.h>
@@ -9,27 +9,39 @@
 using namespace std;
 
 bool always_on_top = false;
-bool borderless = false;
-int window_width = 640;
-int window_height = 480;
-int font_size = 20;
-bool use_gamepad = false;
+bool borderless    = false;
+int  window_width  = 640;
+int  window_height = 480;
+int  font_size     = 20;
+bool use_gamepad   = false;
 
-SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
-SDL_Joystick* gamepad = NULL;
-SDL_Texture* textTexture = NULL;
-TTF_Font* font = NULL;
+SDL_Window*   window      = NULL;
+SDL_Renderer* renderer    = NULL;
+SDL_Joystick* gamepad     = NULL;
+SDL_Texture*  textTexture = NULL;
+TTF_Font*     font        = NULL;
 
-int textWidth = 0;
-int textHeight = 0;
-int steer_value = 0;
-float steer_value_normalized = 0.0f;
-string steer_percent = "";
+const int BUTTON_A     = 0;
+const int BUTTON_B     = 1;
+const int BUTTON_X     = 2;
+const int BUTTON_Y     = 3;
+const int BUTTON_LB    = 4;
+const int BUTTON_RB    = 5;
+const int BUTTON_BACK  = 6;
+const int BUTTON_START = 7;
+const int BUTTON_LS    = 8;
+const int BUTTON_RS    = 9;
+const int BUTTON_HOME  = 10;
+
+int    textWidth                = 0;
+int    textHeight               = 0;
+int    steer_value              = 0;
+float  steer_value_normalized   = 0.0f;
+string steer_percent            = "";
 // bool left_trigger = false;
-int brake_value = -32768;
+int    brake_value              = -32768;
 // bool right_trigger = false;
-int gas_value = -32768;
+int    gas_value                = -32768;
 
 bool ReadConfig() {
     toml::table config;
@@ -41,11 +53,11 @@ bool ReadConfig() {
     }
 
     always_on_top = (bool)config["window"]["always_on_top"].value<bool>().value();
-    borderless = (bool)config["window"]["borderless"].value<bool>().value();
-    window_width = (int)config["window"]["resolution"]["width"].value<int>().value();
+    borderless    = (bool)config["window"]["borderless"].value<bool>().value();
+    window_width  = (int)config["window"]["resolution"]["width"].value<int>().value();
     window_height = (int)config["window"]["resolution"]["height"].value<int>().value();
-    font_size = (int)config["window"]["text"]["font_size"].value<int>().value();
-    use_gamepad = (bool)config["input"]["use_gamepad"].value<bool>().value();
+    font_size     = (int)config["window"]["text"]["font_size"].value<int>().value();
+    use_gamepad   = (bool)config["input"]["use_gamepad"].value<bool>().value();
 
     printf("always_on_top: %s\n", always_on_top ? "true" : "false");
     printf("borderless: %s\n", borderless ? "true" : "false");
@@ -202,18 +214,18 @@ int main(int argc, char* argv[]) {
             else if (e.type == SDL_JOYAXISMOTION && e.jaxis.which == 0) {
                 if (e.jaxis.axis == 0)  // left x
                     steer_value = e.jaxis.value;
-                else if (e.jaxis.axis == 4) {  // left trigger
-                    // left_trigger = true;
-                    brake_value = e.jaxis.value;
-                    // cout << brake_value << "\n";
-                    // left_trigger = brake_value != -32768;
-                } else if (e.jaxis.axis == 5) {  // right trigger
-                    // right_trigger = true;
-                    gas_value = e.jaxis.value;
-                    // right_trigger = gas_value != -32768;
-                }
+                // else if (e.jaxis.axis == 4) {  // left trigger
+                //     // left_trigger = true;
+                //     brake_value = e.jaxis.value;
+                //     // cout << brake_value << "\n";
+                //     // left_trigger = brake_value != -32768;
+                // } else if (e.jaxis.axis == 5) {  // right trigger
+                //     // right_trigger = true;
+                //     gas_value = e.jaxis.value;
+                //     // right_trigger = gas_value != -32768;
+                // }
             }// else if (e.type == SDL_JOYBUTTONDOWN && e.jbutton.which == 0) {
-            //     cout <<  << "\n";
+            //     cout << e.jbutton.which << "\n";
             // }
         }
 
@@ -238,7 +250,7 @@ int main(int argc, char* argv[]) {
             // }
 
             // if (gas_value > -8610) {
-            if (SDL_JoystickGetButton(gamepad, 0)) {
+            if (SDL_JoystickGetButton(gamepad, BUTTON_A)) {
                 SDL_Rect rect = { ww3, 0, ww3, wh2 };
                 SDL_RenderFillRect(renderer, &rect);
 
@@ -256,7 +268,7 @@ int main(int argc, char* argv[]) {
             }
 
             // if (brake_value > -8610) {
-            if (SDL_JoystickGetButton(gamepad, 4)) {
+            if (SDL_JoystickGetButton(gamepad, BUTTON_B)) {
                 SDL_Rect rect = { ww3, wh2, ww3, wh2 };
                 SDL_RenderFillRect(renderer, &rect);
 
