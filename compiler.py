@@ -12,9 +12,9 @@ def main():
     # subprocess.call(f'g++ -c src/tut.cpp -I {include_dir}')
     # subprocess.call(f'g++ tut.o -o tut -L {lib_dir} {lib}')
 
-    subprocess.call('taskkill /im main.exe')
+    subprocess.call('taskkill /im 416inputs.exe')
     subprocess.call(f'g++ -c src/main.cpp -I {include_dir}')
-    subprocess.call(f'g++ main.o -o main -L {lib_dir} {lib}')
+    subprocess.call(f'g++ main.o -o 416inputs -L {lib_dir} {lib}')
 
 if __name__ == '__main__':
     main()
