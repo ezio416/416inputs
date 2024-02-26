@@ -1,5 +1,5 @@
 // c 2023-12-10
-// m 2024-02-23
+// m 2024-02-25
 
 #include <iostream>
 #include <SDL.h>
@@ -13,7 +13,9 @@ bool borderless    = false;
 int  window_width  = 640;
 int  window_height = 480;
 int  font_size     = 20;
-bool use_gamepad   = false;
+bool use_pad       = true;
+int  pad_forward   = 0;
+int  pad_backward  = 1;
 
 SDL_Window*   window      = NULL;
 SDL_Renderer* renderer    = NULL;
@@ -46,7 +48,7 @@ int    gas_value                = -32768;
 bool ReadConfig() {
     toml::table config;
     try {
-        config = toml::parse_file("main.toml");
+        config = toml::parse_file("config.toml");
     } catch (const toml::parse_error& err) {
         cerr << err << "\n";
         return false;
@@ -54,23 +56,27 @@ bool ReadConfig() {
 
     always_on_top = (bool)config["window"]["always_on_top"].value<bool>().value();
     borderless    = (bool)config["window"]["borderless"].value<bool>().value();
-    window_width  = (int)config["window"]["resolution"]["width"].value<int>().value();
-    window_height = (int)config["window"]["resolution"]["height"].value<int>().value();
-    font_size     = (int)config["window"]["text"]["font_size"].value<int>().value();
-    use_gamepad   = (bool)config["input"]["use_gamepad"].value<bool>().value();
+    window_width  = (int) config["window"]["resolution"]["width"].value<int>().value();
+    window_height = (int) config["window"]["resolution"]["height"].value<int>().value();
+    font_size     = (int) config["window"]["text"]["font_size"].value<int>().value();
+    use_pad       = (bool)config["input"]["use_pad"].value<bool>().value();
+    pad_forward   = (int) config["input"]["pad_forward"].value<int>().value();
+    pad_backward  = (int) config["input"]["pad_backward"].value<int>().value();
 
     printf("always_on_top: %s\n", always_on_top ? "true" : "false");
-    printf("borderless: %s\n", borderless ? "true" : "false");
+    printf("borderless: %s\n",    borderless ? "true" : "false");
     printf("resolution: %ix%i\n", window_width, window_height);
-    printf("font_size: %i\n", font_size);
-    printf("use_gamepad: %s\n", use_gamepad ? "true" : "false");
+    printf("font_size: %i\n",     font_size);
+    printf("use_pad: %s\n",       use_pad ? "true" : "false");
+    printf("pad_forward: %i\n",   pad_forward);
+    printf("pad_backward: %i\n",  pad_backward);
 
     return true;
 }
 
 bool Init() {
     Uint32 init_flags = SDL_INIT_VIDEO;
-    if (use_gamepad)
+    if (use_pad)
         init_flags |= SDL_INIT_JOYSTICK;
 
     if (SDL_Init(init_flags) < 0) {
@@ -92,7 +98,7 @@ bool Init() {
     if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"))
         printf("warning: linear texture filtering disabled\n");
 
-    if (use_gamepad && !SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1"))
+    if (use_pad && !SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1"))
         printf("warning: background joystick failed\n");
 
     Uint32 flags = SDL_WINDOW_SHOWN;
@@ -197,7 +203,7 @@ int main(int argc, char* argv[]) {
     int last_steer_value = 0;
 
     while (!quit) {
-        if (use_gamepad) {
+        if (use_pad) {
             if (SDL_NumJoysticks() == 0)
                 JoystickClose();
             else {
@@ -214,19 +220,7 @@ int main(int argc, char* argv[]) {
             else if (e.type == SDL_JOYAXISMOTION && e.jaxis.which == 0) {
                 if (e.jaxis.axis == 0)  // left x
                     steer_value = e.jaxis.value;
-                // else if (e.jaxis.axis == 4) {  // left trigger
-                //     // left_trigger = true;
-                //     brake_value = e.jaxis.value;
-                //     // cout << brake_value << "\n";
-                //     // left_trigger = brake_value != -32768;
-                // } else if (e.jaxis.axis == 5) {  // right trigger
-                //     // right_trigger = true;
-                //     gas_value = e.jaxis.value;
-                //     // right_trigger = gas_value != -32768;
-                // }
-            }// else if (e.type == SDL_JOYBUTTONDOWN && e.jbutton.which == 0) {
-            //     cout << e.jbutton.which << "\n";
-            // }
+            }
         }
 
         SDL_SetRenderDrawColor(renderer, 0x66, 0x66, 0x66, 0xFF);
@@ -242,47 +236,15 @@ int main(int argc, char* argv[]) {
 
         SDL_SetRenderDrawColor(renderer, r, g, b, a);
 
-        if (use_gamepad && gamepad != NULL) {
-            // 0 A  1 B  2 X  3 Y  4 LB  5 RB  6 back  7 start  8 ls  9 rs  10 home
-            // for (int i = 0; i < 15; i++) {
-            //     if (SDL_JoystickGetButton(gamepad, i))
-            //         printf("button %i\n", i);
-            // }
-
-            // if (gas_value > -8610) {
-            if (SDL_JoystickGetButton(gamepad, BUTTON_A)) {
+        if (use_pad && gamepad != NULL) {
+            if (SDL_JoystickGetButton(gamepad, pad_forward)) {
                 SDL_Rect rect = { ww3, 0, ww3, wh2 };
                 SDL_RenderFillRect(renderer, &rect);
-
-                // if (!LoadTextureFromText(to_string(gas_value), textColor))
-                //     printf("gas text failed to load\n");
-                // else {
-                //     rect = {
-                //         (window_width / 2) - (textWidth / 2),
-                //         (wh2 / 2) - (textHeight / 2),
-                //         textWidth,
-                //         textHeight
-                //     };
-                //     SDL_RenderCopyEx(renderer, textTexture, NULL, &rect, 0, NULL, SDL_FLIP_NONE);
-                // }
             }
 
-            // if (brake_value > -8610) {
-            if (SDL_JoystickGetButton(gamepad, BUTTON_B)) {
+            if (SDL_JoystickGetButton(gamepad, pad_backward)) {
                 SDL_Rect rect = { ww3, wh2, ww3, wh2 };
                 SDL_RenderFillRect(renderer, &rect);
-
-                // if (!LoadTextureFromText(to_string(brake_value), textColor))
-                //     printf("brake text failed to load\n");
-                // else {
-                //     rect = {
-                //         (window_width / 2) - (textWidth / 2),
-                //         window_height - (wh2 / 2) - (textHeight / 2),
-                //         textWidth,
-                //         textHeight
-                //     };
-                //     SDL_RenderCopyEx(renderer, textTexture, NULL, &rect, 0, NULL, SDL_FLIP_NONE);
-                // }
             }
 
             if (steer_value != last_steer_value) {
@@ -371,13 +333,6 @@ int main(int argc, char* argv[]) {
         SDL_RenderDrawRect(renderer, &outline);
 
         SDL_RenderDrawLine(renderer, ww3, wh2, ww3 * 2 - 1, wh2);  // middle
-
-        // if (!LoadTextureFromText("hello", textColor)) {
-        //     printf("text failed to load\n");
-        // } else {
-        //     SDL_Rect rect = { 20, 20, textWidth, textHeight };
-        //     SDL_RenderCopyEx(renderer, textTexture, NULL, &rect, 0, NULL, SDL_FLIP_NONE);
-        // }
 
         SDL_RenderPresent(renderer);
     }

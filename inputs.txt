@@ -1,0 +1,14 @@
+In main.toml, you may change the inputs read from your controller for forward and backward.
+By default, these are A and B respectively, but you may use any of the following digital inputs instead:
+
+0  (A)
+1  (B)
+2  (X)
+3  (Y)
+4  (LB/L1)
+5  (RB/R1)
+6  (back/select)
+7  (start)
+8  (left stick click)
+9  (right stick click)
+10 (home)

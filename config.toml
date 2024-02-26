@@ -10,4 +10,6 @@ height = 400
 font_size = 100
 
 [input]
-use_gamepad = true
+use_pad = true
+pad_forward = 0
+pad_backward = 1
